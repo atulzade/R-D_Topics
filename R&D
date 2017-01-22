@@ -1,4 +1,6 @@
 # R-D_Topics
 
-Preinstallation Considerations :
+Preinstallation Considerations : 24 mns
+# cat /proc/interrupts ( command to check devices attached to the computer )
+# man setserial ( to check the man page of devices serial )
 
