@@ -1,1 +1,13 @@
+Steps :
 
+How to install Ansible:
+1) Install EPEL Repo on Centos 7.x
+# yum -y install epel-release ( Install epel using the following command )
+# yum repolist ( Refresh repo by typing the following command )
+2) Follow this link : https://www.cyberciti.biz/faq/installing-rhel-epel-repo-on-centos-redhat-7-x/
+3) # sudo yum install ansible
+
+How to connect to remote host using Ansible:
+https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-ansible-on-centos-7
+
+ansible all -m ping -u user --ask-pass
