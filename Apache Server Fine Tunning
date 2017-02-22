@@ -15,3 +15,22 @@ processes, no extra process will start since we have defined an upper cap of Max
 to 1000, after 16 child processes and 400 connections, no extra process will start and we cannot service more than 400 concurrent 
 clients even if we have increase the MaxClient parameter. In this case, we need to also increase ServerLimit to 1000/25 i.e. 
 MaxClients/ThreadsPerChild=40 So this is the optmized configuration to server 1000 clients
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+2.2 Choose appropriate MPM:
+Apache server ships with a selection of Multi-Processing Modules (MPMs) which are responsible for binding to network ports on the 
+machine, accepting requests, and dispatching children to handle the requests [3]. Only one MPM can be loaded into the server at 
+any time.
+
+Choosing an MPM depends on various factors such as whether the OS supports threads, how much memory is available, scalability 
+versus stability, whether non-thread-safe third-party modules are used, etc.. Linux systems can choose to use a threaded MPM like 
+worker or a non-threaded MPM like prefork:
+
+Worker MPM uses multiple child processes. It's multi-threaded within each child and each thread handles a single connection. 
+Worker is fast and highly scalable and the memory footprint is comparatively low. It's well suited for multiple processors. On the 
+other hand, worker is less tolerant to faulty modules and faulty threads can affect all the threads in a child process.
+
+Prefork MPM uses multiple child processes, each child handles one connection at a time. Prefork is well suited for single or 
+double CPU systems, speed is comparable to that of worker and it's highly tolerant to faulty modules and crashing children. 
+But the memory usage is high, more traffic leads to more memory usage. 
