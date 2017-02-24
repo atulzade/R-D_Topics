@@ -33,4 +33,29 @@ other hand, worker is less tolerant to faulty modules and faulty threads can aff
 
 Prefork MPM uses multiple child processes, each child handles one connection at a time. Prefork is well suited for single or 
 double CPU systems, speed is comparable to that of worker and it's highly tolerant to faulty modules and crashing children. 
-But the memory usage is high, more traffic leads to more memory usage. 
+But the memory usage is high, more traffic leads to more memory usage.
+
+-------------------------------------------------------------------------------------------------------------------------------
+
+<IfModule mpm_worker_module>
+   LoadModule cgid_module modules/mod_cgid.so
+   StartServers         4
+   MaxClients         300
+   MinSpareThreads     25
+   MaxSpareThreads     75
+   ThreadsPerChild     25
+   MaxRequestsPerChild  0
+</IfModule>
+<IfModule mpm_event_module>
+   LoadModule cgid_module modules/mod_cgid.so
+</IfModule>
+<IfModule mpm_prefork_module>
+   LoadModule cgi_module modules/mod_cgi.so
+   StartServers       8
+   MinSpareServers    5
+   MaxSpareServers   20
+   ServerLimit      2000
+   MaxClients       2000
+   MaxRequestsPerChild  8000
+</IfModule>
+
