@@ -1,0 +1,13 @@
+[root@osboxes yum.repos.d]# ls
+CentOS-Base.repo       CentOS-fasttrack.repo  CentOS-Vault.repo
+CentOS-CR.repo         CentOS-Media.repo      logstash-forwarder.repo
+CentOS-Debuginfo.repo  CentOS-Sources.repo
+[root@osboxes yum.repos.d]# for file in CentOS*.repo
+> do
+> mv -i "${file}" "${file/.repo/.repo.org}"
+> done
+[root@osboxes yum.repos.d]# ls
+CentOS-Base.repo.org       CentOS-fasttrack.repo.org  CentOS-Vault.repo.org
+CentOS-CR.repo.org         CentOS-Media.repo.org      logstash-forwarder.repo
+CentOS-Debuginfo.repo.org  CentOS-Sources.repo.org
+[root@osboxes yum.repos.d]#
