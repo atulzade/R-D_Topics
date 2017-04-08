@@ -1,0 +1,60 @@
+name: Open Ldap Master install ans configure
+  hosts: test4
+#  sudo: yes
+  vars:
+       repo: PROD
+       ldap_server_uri: 192.168.2.110
+       ldap_suffix: dc=equity,dc=local
+  tasks:
+
+
+  - name: Ensure dependencies are installed
+    yum: name={{ item }} state=installed
+    with_items:
+      - openldap-clients
+      - nss-pam-ldapd
+      - pam_ldap
+      - openssh-ldap
+      - authconfig
+      - openssl-devel
+      - nfs-utils
+      - autofs
+
+  - name: Install openssl-devel if LDAP server uses SSL
+    yum: name=openssl-devel state=installed
+
+  - name: Ensure autofs is started
+    service: name=autofs state=started enabled=yes
+
+  - name: Ensure ldap userinformation is enabled
+    shell: /usr/sbin/authconfig --enableldap --update --enableldapauth --update --enablemkhomedir --update --enableshadow --update --enablelocauthorize --update
+  
+  - name: Ensure ldap authentication is enabled
+    shell: /usr/sbin/authconfig --enableldapauth --update
+  
+  - name: Ensure mkhomedir module is enabled
+    shell: /usr/sbin/authconfig --enablemkhomedir --update
+  
+  - name: Ensure shadow password is enabled
+    shell: /usr/sbin/authconfig --enableshadow --update
+  
+  - name: Ensure local authorization is enabled
+    shell: /usr/sbin/authconfig --enablelocauthorize --update
+  
+  - name: "Template: # Copy LDAP.CONF file "
+    template: src=templates/client-ldap.conf.j2 dest=/etc/openldap/ldap.conf mode=644
+
+  - name: "Template: # Copy AUTOFS.CONF file "
+    template: src=templates/client-autofs.conf.j2 dest=/etc/autofs.conf mode=644
+  
+  - name: "Template: # Copy nsswitch.conf  file "
+    template: src=templates/client-nsswitch.conf.j2 dest=/etc/nsswitch.conf mode=644
+
+  - name: "Template: # Copy nslcd.conf  file "
+    template: src=templates/client-nslcd.conf.j2 dest=/etc/nslcd.conf mode=644
+
+  - name: Ensure nslcd is restarted
+    service: name=nslcd state=restarted enabled=yes
+
+  - name: Ensure autofs is restarted
+    service: name=autofs state=restarted 
