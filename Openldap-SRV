@@ -1,5 +1,23 @@
 http://www.learnitguide.net/2016/01/configure-openldap-server-on-rhel7.html
 
+http://www.itzgeek.com/how-tos/linux/centos-how-tos/step-step-openldap-server-configuration-centos-7-rhel-7.html
+
+http://www.itzgeek.com/how-tos/linux/configure-openldap-master-slave-replication.html
+
+https://www.digitalocean.com/community/tutorials/how-to-set-up-an-nfs-mount-on-centos-6 ( NFS server )
+
+https://www.server-world.info/en/note?os=CentOS_7&p=openldap&f=7 ( To configure Phpldapadmin )
+
+http://suresh-chandra.blogspot.jp/
+
+https://www.certdepot.net/ldap-client-configuration-authconfig/
+
+Phpldap config file settings-
+--------------------------------------------------------------------------------------------
+by putting a # at the beginning, so it looks like this:
+#$ldapservers->SetValue($i,'login','attr','uid');
+--------------------------------------------------------------------------------------------
+
 Step by Step OpenLDAP Server Configuration on RHEL7/Centos7
 
  OpenLDAP Server Configuration on RHEL7/Centos7
