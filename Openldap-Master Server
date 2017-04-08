@@ -1,0 +1,355 @@
+- name: Open Ldap Master install ans configure
+  hosts: 192.168.0.212
+#  sudo: yes
+
+  vars:
+        - test: test1
+        - ldap_dc: equity
+        - ldap_tld: local
+        - ldap_suffix: "dc={{ ldap_dc }},dc={{ ldap_tld }}"
+        - ldap_root_username: Manager
+        - ldap_root_password: pppppp
+        - ldap_root_dn: "cn={{ ldap_root_username }},{{ ldap_suffix }}"
+        - ldap_dir: /var/lib/ldap
+        - ldap_sampleuser_name: ansible
+        - ldap_sampleuser_password: ansible
+        - ldap_sampleuser_publickey: "Replace with your Public key"
+        - ldap_users_ou: people
+        - ldap_users_dn: "cn={{ ldap_users_ou }},{{ ldap_suffix }}"
+        - ldap_group_ou: groups
+        - ldap_group_dn: "cn={{ ldap_group_ou }},{{ ldap_suffix }}"
+        - slapd_conf_path: "/etc/openldap/slapd.conf"
+        - ldap_samplegroup_name: members
+        - ldap_sudoers_base: "ou={{ ldap_sudoers_ou }},{{ ldap_suffix }}"
+        - ldap_sudoers_ou: SUDOers
+        - ldap_sampleuser_publickey: "Replace with your Public key"
+        - ldap_sampleuser_uidnumber: 10000
+        - ldap_sampleuser_gidnumber: 10000
+        - slapd_conf_path: "{{ openldap_conf_dir }}/slapd.conf"
+        # client side settings
+        - ldap_server_scheme: ldap
+        - ldap_server_host: 10.136.1.95
+        #- ldap_server_host: 127.0.0.1
+        - ldap_server_port: 389
+        - ldap_server_uri: "{{ ldap_server_scheme }}://{{ ldap_server_host }}:{{ ldap_server_port }}"
+
+  handlers:
+
+        - name: restart sshd
+          service: name={{ sshd_service }} state=restarted
+        - name: restart nslcd
+          service: name=nslcd state=restarted
+        - name: restart nscd
+          service: name=nscd state=restarted
+        - name: restart httpd
+          service: name=httpd state=restarted
+
+  tasks:
+
+#        - name: Ensure epel-release is installed.
+#          yum: name={{ item }} state=installed
+#          with_items:
+#            - epel-release
+#          tags:
+#            - package
+
+        - name: Ensure openldap and its componet is installed.
+          yum: name={{ item }} state=installed
+          with_items:
+               - openldap
+               - openldap-servers
+               - openldap-clients
+               - openssh-ldap
+               - httpd
+               - pam_ldap
+               - autofs
+               - php-common
+               - phpldapadmin
+          tags:
+            - package
+
+
+        - name: Ensure httpd is started
+          service: name=httpd state=started enabled=yes
+
+        - name: Set OS specific varible
+          set_fact:
+            openldap_conf_dir: /etc/openldap
+            authorizedkeys_command_path: /usr/libexec/openssh/find-ldap-publickey
+            sshd_service: sshd
+        
+
+        - name: Ensure ldap conf directory is present
+          file: path={{ ldap_dir }} state=directory
+        
+        - name: Ensure sample DB conf file is copied
+          shell: creates={{ ldap_dir }}/DB_CONFIG cp /usr/share/openldap-servers/DB_CONFIG.example {{ ldap_dir }}/DB_CONFIG
+        
+        - name: Ensure sample conf file is copied
+          shell: creates={{ slapd_conf_path }} cp /usr/share/openldap-servers/slapd.conf.obsolete {{ slapd_conf_path }}
+          when: ansible_distribution == "CentOS" and ansible_distribution_major_version == "6"
+        
+        - name: Ensure ldap directory permission is correct
+          file: path={{ ldap_dir }} owner=ldap group=ldap
+
+        - name: Ensure openldap is started
+          service: name=slapd state=started enabled=yes
+
+        - name: Genrate ldap master password
+          shell: /usr/sbin/slappasswd -s {{ ldap_root_password }}
+          register: generated_root_password
+          ignore_errors: yes
+          changed_when: False
+
+        - name: Ensure slapd.conf is set
+          template: src=templates/master-slapd.conf.j2 dest={{ slapd_conf_path }} mode=0755 backup=yes
+
+        - name: Change the permissions
+          file: path={{ item }} owner=ldap group=ldap recurse=yes state=directory
+          with_items:
+          - /var/lib/ldap
+          - /etc/openldap/slapd.d/
+
+        - name: Get sudo version
+          shell: rpm -qi sudo | grep Version | awk '{print $3}'
+          register: sudo_version
+
+        - name: Ensure sudo schema is set
+          shell: creates=/etc/openldap/schema/sudo.schema cp /usr/share/doc/sudo-{{ sudo_version.stdout }}/schema.OpenLDAP /etc/openldap/schema/sudo.schema
+
+        - name: Ensure schema file permission set
+          shell: chmod 755 /etc/openldap/schema/sudo.schema
+
+        - name: Ensure sudo.ldf config is copied
+          template: src=templates/sudo.ldif.j2 dest=/etc/openldap/schema/sudo.ldif mode=0755 backup=yes
+
+
+        - name: Get autofs version
+          shell: rpm -qi autofs | grep Version | awk '{print $3}'
+          register: autofs_version
+
+        - name: Ensure autofs schema is set
+          shell: creates=/etc/openldap/schema/autofs.schema cp /usr/share/doc/autofs-{{ autofs_version.stdout }}/autofs.schema /etc/openldap/schema/autofs.schema
+
+        - name: Ensure schema file permission set
+          shell: chmod 755 /etc/openldap/schema/autofs.schema
+
+        - name: Get openssh-ldap version
+          shell: rpm -qi openssh-ldap | grep "Version" | awk '{print $3}'
+          register: openssh_ldap_version
+
+        - name: Ensure openssh schema is set
+          shell: creates={{ openldap_conf_dir }}/schema/openssh.schema cp /usr/share/doc/openssh-ldap-{{ openssh_ldap_version.stdout }}/openssh-lpk-openldap.schema {{ openldap_conf_dir }}/schema/openssh.schema
+
+        - name: Ensure openssh.schema file permission set
+          shell: chmod 755 /etc/openldap/schema/openssh.schema
+
+        - name: Ensure openssh include statement is present
+          lineinfile: dest={{ slapd_conf_path }} regexp="^include\s{{ openldap_conf_dir }}/schema/openssh.schema" line="include {{ openldap_conf_dir }}/schema/openssh.schema"
+          changed_when: False
+
+        - name: Ensure ldif file is set
+          template: src=templates/{{ item }} dest=/tmp/{{ item }} mode=0755 backup=yes
+          with_items:
+            - chrootpw.ldif
+            - chdomain.ldif
+            - basedomain.ldif
+            - mod_syncprov.ldif
+            - syncprov.ldif
+            - autofs.ldif
+            - SUDOers.ldif
+
+        - name: Ensure EXTERNAL chrootpw added
+          shell: ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/chrootpw.ldif
+
+        # Add LDAP schema
+        - name: Add LDAP schema
+          shell: ldapadd -Y EXTERNAL -H ldapi:///  -f {{ item }} 
+          with_items:
+          - /etc/openldap/schema/cosine.ldif
+          - /etc/openldap/schema/nis.ldif
+          - /etc/openldap/schema/inetorgperson.ldif
+        
+        - name: Ensure EXTERNAL chdomain added
+          shell: ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/chdomain.ldif
+        
+        - name: Ensure EXTERNAL basedomain added
+          shell: ldapadd -x -D {{ ldap_root_dn }} -w  {{ ldap_root_password }} -f /tmp/basedomain.ldif
+        
+        - name: Ensure EXTERNAL mod_syncprov added
+          shell: ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/mod_syncprov.ldif
+        
+        - name: Ensure EXTERNAL syncprov added
+          shell: ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/syncprov.ldif
+
+        - name: Ensure EXTERNAL autofs added
+          shell: ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/autofs.ldif
+
+        - name: Ensure EXTERNAL sudoers added
+          #shell: ldapadd -Y EXTERNAL -H ldapi:/// -f /tmp/sudo.ldif
+          shell: ldapadd -Y EXTERNAL -H ldapi:/// -f /etc/openldap/schema/sudo.ldif
+
+        - name: Ensure openldap is restarted1
+          service: name=slapd state=restarted enabled=yes
+
+        - name: Genrate ldap sample user password
+          shell: creates=/tmp/adduser.ldif /usr/sbin/slappasswd -s {{ ldap_sampleuser_password }}
+          register: generated_sampleuser_password
+          ignore_errors: yes
+          changed_when: False
+        
+        - name: Ensure ldif other file is set1
+          template: src=templates/{{ item }} dest=/tmp/{{ item }} mode=0755 backup=yes
+          with_items:
+            - addou.ldif
+            - adduser.ldif
+            - addgroup.ldif
+            - auto_home.ldif
+
+        - name: list organization unit
+          shell: ldapsearch -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -b "{{ ldap_suffix }}" "ou={{ ldap_users_ou }}"
+          register: ou_list
+          ignore_errors: yes
+          changed_when: False
+      
+        - name: Ensure organization unit is created
+          shell: ldapadd -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -f /tmp/addou.ldif
+          when: ou_list.stdout.count("ou={{ ldap_users_ou }},{{ ldap_suffix }}") < 1  
+
+
+        - name: list users
+          shell: ldapsearch -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -b "{{ ldap_suffix }}" "objectClass=posixAccount"
+          register: user_list
+          ignore_errors: yes
+          changed_when: False
+        
+        - name: Ensure user is created
+          shell: ldapadd -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -f /tmp/adduser.ldif
+          when: user_list.stdout.count("uid={{ ldap_sampleuser_name }},ou={{ ldap_users_ou }},{{ ldap_suffix }}") < 1 
+
+        - name: list groups
+          shell: ldapsearch -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -b "{{ ldap_suffix }}" "cn={{ ldap_samplegroup_name }}"
+          register: group_list
+          ignore_errors: yes
+          changed_when: False
+        
+        - name: Ensure group is created
+          shell: ldapadd -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -f /tmp/addgroup.ldif
+          when: group_list.stdout.count("cn={{ ldap_samplegroup_name }},ou={{ ldap_group_ou }},{{ ldap_suffix }}") < 1
+
+        - name: Ensure sudoers config is set
+          template: src=templates/sudoers.j2 dest=/etc/sudoers mode=0755 backup=yes
+
+        - name: list organization unit
+          shell: ldapsearch -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -b "{{ ldap_suffix }}" "objectClass=organizationalUnit"
+          register: ou_list
+          ignore_errors: yes
+          changed_when: False
+        
+        - name: list automount
+          shell: ldapsearch -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -b "{{ ldap_suffix }}" "objectClass=automount"
+          register: auto_mount
+          ignore_errors: yes
+          changed_when: False
+
+        - name: Ensure automount ou is created
+          shell: ldapadd -D "{{ ldap_root_dn }}" -w {{ ldap_root_password }} -f /tmp/auto_home.ldif
+
+        - name: Ensure nslcd cond is correct
+          lineinfile: dest=/etc/nslcd.conf regexp="^{{ item }}" line="{{ item }}"
+          with_items:
+            - "tls_cacertdir {{ openldap_conf_dir }}/cacerts"
+            - "tls_reqcert allow"
+            - "tls_cacertdir {{ openldap_conf_dir }}/certs"
+          when: ldap_server_scheme == "ldaps"
+          notify: restart nslcd
+        
+        - name: Ensure Authorized keys command is set
+          template: src=templates/find-ldap-publickey.j2 dest={{ authorizedkeys_command_path }} mode=0755 backup=yes
+          notify: restart sshd
+        
+        - name: Ensure Authorized keys command config is set
+          lineinfile: dest=/etc/ssh/sshd_config regexp="^AuthorizedKeysCommand\s{{ authorizedkeys_command_path }}" line="AuthorizedKeysCommand {{ authorizedkeys_command_path }}"
+          notify: restart sshd
+        
+#        - name: Ensure Authorized keys command user is set
+#          lineinfile: dest=/etc/ssh/sshd_config regexp="^AuthorizedKeysCommandRunAs\sroot" line="AuthorizedKeysCommandRunAs root"  validate='sshd -t -f %s'
+#          notify: restart sshd
+
+        - name: Ensure Authorized keys command user is set
+          lineinfile: dest=/etc/ssh/sshd_config regexp="^AuthorizedKeysCommandUser\sroot" line="AuthorizedKeysCommandUser root"  validate='sshd -t -f %s'
+          notify: restart sshd
+ 
+        - name: Ensure Phpldapadmin sample conf file is copied
+          template: src=templates/config.php dest=/etc/phpldapadmin/config.php mode=0644 backup=yes
+        
+        - name: Ensure Phpldapadmin Httpd sample conf file is copied
+          template: src=templates/phpldapadmin.conf dest=/etc/httpd/conf.d/phpldapadmin.conf mode=0644 backup=yes
+
+        - name: Ensure slapd is restarted finally
+          service: name=slapd state=restarted
+
+        - name: Ensure httpd is restarted finally
+          service: name=httpd state=restarted 
+
+# Client install 
+
+        - name: Ensure dependencies are installed
+          yum: name={{ item }} state=installed
+          with_items:
+            - openldap-clients
+            - nss-pam-ldapd
+            - pam_ldap
+            - openssh-ldap
+            - authconfig
+            - openssl-devel
+            - nfs-utils
+            - autofs
+
+          tags:
+            - package
+      
+        - name: Install openssl-devel if LDAP server uses SSL
+          yum: name=openssl-devel state=installed
+          tags:
+            - package
+
+      
+        - name: Ensure autofs is started
+          service: name=autofs state=started enabled=yes
+      
+        - name: Ensure ldap userinformation is enabled
+          shell: /usr/sbin/authconfig --enableldap --update
+      
+        - name: Ensure ldap authentication is enabled
+          shell: /usr/sbin/authconfig --enableldapauth --update
+      
+        - name: Ensure mkhomedir module is enabled
+          shell: /usr/sbin/authconfig --enablemkhomedir --update
+      
+        - name: Ensure shadow password is enabled
+          shell: /usr/sbin/authconfig --enableshadow --update
+      
+        - name: Ensure local authorization is enabled
+          shell: /usr/sbin/authconfig --enablelocauthorize --update
+      
+        - name: "Template: # Copy LDAP.CONF file "
+          template: src=templates/client-ldap.conf.j2 dest=/etc/openldap/ldap.conf mode=644
+      
+        - name: "Template: # Copy AUTOFS.CONF file "
+          template: src=templates/client-autofs.conf.j2 dest=/etc/autofs.conf mode=644
+      
+        - name: "Template: # Copy nsswitch.conf  file "
+          template: src=templates/client-nsswitch.conf.j2 dest=/etc/nsswitch.conf mode=644
+      
+        - name: "Template: # Copy nslcd.conf  file "
+          template: src=templates/client-nslcd.conf.j2 dest=/etc/nslcd.conf mode=644
+      
+        - name: Ensure nslcd is restarted
+          service: name=nslcd state=restarted enabled=yes
+      
+        - name: Ensure autofs is restarted
+          service: name=autofs state=restarted
+
+        - name: Ensure SUDOers ldif added
+          shell: ldapadd -H ldap://10.136.1.95/ -w {{ ldap_root_password }} -x -D cn=manager,dc=equity,dc=local -f /tmp/SUDOers.ldif
