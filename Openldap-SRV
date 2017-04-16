@@ -17,6 +17,9 @@ Phpldap config file settings-
 by putting a # at the beginning, so it looks like this:
 #$ldapservers->SetValue($i,'login','attr','uid');
 --------------------------------------------------------------------------------------------
+ authconfig --enableforcelegacy --update
+ authconfig --enableldap --enableldapauth --ldapserver="instructor.example.com" --ldapbasedn="dc=example,dc=com" --update
+ -------------------------------------------------------------------------------------------
 
 Step by Step OpenLDAP Server Configuration on RHEL7/Centos7
 
