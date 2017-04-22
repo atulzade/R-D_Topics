@@ -1,0 +1,5 @@
+# route -n ( to check the routing & gateway )
+
+# route ( to check the routing )
+
+arp -a ( to check the network IP addresses )
