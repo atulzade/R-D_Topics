@@ -1,0 +1,117 @@
+https://www.rootusers.com/lvm-resize-how-to-increase-an-lvm-partition/
+
+Overview of Logical Volume Manager (LVM)
+
+Before working through the resizing process it’s important you first understand some basic concepts around physical volumes, volume groups, logical volumes, and the file system.
+
+    Physical Volume (PV): This can be created on a whole physical disk (think /dev/sda) or a Linux partition.
+    Volume Group (VG): This is made up of at least one or more physical volumes.
+    Logical Volume (LV): This is sometimes referred to as the partition, it sits within a volume group and has a file system written to it.
+    File System: A file system such as ext4 will be on the logical volume.
+
+LVM Resize – How to increase or expand the logical volume
+
+This process is extremely easy to do with LVM as it can be done on the fly with no downtime needed, you can perform it on a mounted volume without interruption. In order to increase the size of a logical volume, the volume group that it is in must have free space available.
+
+To view the free space of your volume group, run vgdisplay command as shown below and look at the “Free PE / Size” field.
+
+[root@CentOS7 ~]# vgdisplay
+  --- Volume group ---
+  VG Name               centos
+  System ID
+  Format                lvm2
+  Metadata Areas        2
+  Metadata Sequence No  6
+  VG Access             read/write
+  VG Status             resizable
+  MAX LV                0
+  Cur LV                3
+  Open LV               2
+  Max PV                0
+  Cur PV                2
+  Act PV                2
+  VG Size               20.74 GiB
+  PE Size               4.00 MiB
+  Total PE              5309
+  Alloc PE / Size       4030 / 15.74 GiB
+  Free  PE / Size       1280 / 5.00 GiB
+  VG UUID               VvG6Sp-wIgb-LTh0-szdU-s9R1-a6K9-qHassI
+
+In this example we have 5GB of free space in the volume group, as shown by “Free PE / Size 1279 / 5.00 GiB”.
+
+Note: If you do not have any or enough free space in the volume group, you will first need to expand the volume group to complete the resize. Alternatively if you have multiple LVM partitions, you could shrink a different logical volume first to create space within the volume group.
+
+Now that we have confirmed there is space free within the volume group, confirm the name of the logical volume you want to increase as well as how much space you plan on adding. The below lvdisplay command will show all logical volumes and their current size. It will also show the volume group that the logical volume is a member of, so ensure that the correct volume group has been checked for enough space with vgdisplay as previously mentioned to prevent trying to increase a logical volume that is inside some other volume group.
+
+As shown in the example below, we are going to be working with the logical volume “var” which is in volume group “centos”, the volume group we saw in vgdisplay. In this example we only have just the one volume group, but you may have more so you need to check.
+
+[root@CentOS7 ~]# lvdisplay
+  --- Logical volume ---
+  LV Path                /dev/centos/var
+  LV Name                var
+  VG Name                centos
+  LV UUID                7PNgg2-ZmnG-a26g-zRoT-PRVM-RDc1-oq6J4M
+  LV Write Access        read/write
+  LV Creation host, time CentOS7, 2015-04-16 07:50:25 +1000
+  LV Status              available
+  # open                 0
+  LV Size                5.00 GiB
+  Current LE             1280
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     256
+  Block device           253:2
+
+Now it’s time to expand the logical volume. In the below example we are using the -L flag to increase by a size specified (M for Megabytes, G for Gigabytes, T for Terabytes). You can alternatively remove the + to increase to the amount specified rather than by the amount specified.
+
+lvextend -L+5G /dev/centos/var
+  Rounding size to boundary between physical extents: 4.90 GiB
+  Size of logical volume centos/var changed from 5.00 GiB (1280 extents) to 10.00 GiB (2560 extents).
+  Logical volume var successfully resized
+
+The above command will increase the logical volume /dev/centos/var by 5GB, currently it is already 5GB so this will increase it to a total of 10GB. You could achieve the same with “lvextend -L 10G /dev/centos/var” which will increase the logical volume to 10GB as well, as this is what was specified with no +. Alternatively if you instead want to just use all free space in the volume group rather than specifying a size to increase to, run “lvextend -l +100%FREE /dev/centos/var”.
+
+We can run the below lvdisplay command shown below to check that the extend completed as expected.
+
+[root@CentOS7 ~]# vgdisplay
+  --- Logical volume ---
+  LV Path                /dev/centos/var
+  LV Name                var
+  VG Name                centos
+  LV UUID                7PNgg2-ZmnG-a26g-zRoT-PRVM-RDc1-oq6J4M
+  LV Write Access        read/write
+  LV Creation host, time CentOS7, 2015-04-16 07:50:25 +1000
+  LV Status              available
+  # open                 0
+  LV Size                10.00 GiB
+  Current LE             2560
+  Segments               1
+  Allocation             inherit
+  Read ahead sectors     auto
+  - currently set to     8192
+  Block device           253:2
+
+Now that the logical volume has been extended, we can resize the file system. This will extend the file system so that it takes up the newly created space inside the logical volume. The command may differ depending on the type of file system you are using.
+
+Use this for ext3/4 based file systems
+
+resize2fs /dev/centos/var
+
+Alternatively, use this for xfs based file systems
+
+xfs_growfs /dev/centos/var
+
+After the file system has been resized the space should be ready to use. If you run a ‘df’ command to view the disk space you should see that it’s been increased successfully.
+
+[root@CentOS7 mnt]# df -h
+Filesystem               Size  Used Avail Use% Mounted on
+/dev/mapper/centos-root  9.8G  1.4G  8.5G  14% /
+devtmpfs                 908M     0  908M   0% /dev
+tmpfs                    914M     0  914M   0% /dev/shm
+tmpfs                    914M  8.6M  905M   1% /run
+tmpfs                    914M     0  914M   0% /sys/fs/cgroup
+/dev/sda1                497M   96M  402M  20% /boot
+/dev/mapper/centos-var    10G   33M   10G   1% /mnt
+
+In this example I have run a ‘mount /dev/centos/var /mnt’ to mount the logical volume to /mnt, as shown above /mnt is correctly reporting a size of 10G.
