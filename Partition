@@ -1,5 +1,11 @@
 https://www.rootusers.com/lvm-resize-how-to-increase-an-lvm-partition/
 
+https://www.digitalocean.com/community/tutorials/an-introduction-to-storage-terminology-and-concepts-in-linux
+
+https://www.digitalocean.com/community/tutorials/how-to-partition-and-format-storage-devices-in-linux
+
+----------------------------------------------------------------------------------
+
 Overview of Logical Volume Manager (LVM)
 
 Before working through the resizing process it’s important you first understand some basic concepts around physical volumes, volume groups, logical volumes, and the file system.
