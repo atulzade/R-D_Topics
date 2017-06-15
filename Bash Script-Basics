@@ -1,0 +1,30 @@
+#Bash script commands 
+
+### Commands to use in file ###
+#w [ to toggle between lines from up to down ]
+
+#b [ to toggle between lines from down to up ]
+
+#0 zero [ move the cursor to start line ]
+
+#$ [ move the cursor to the end of line ]
+
+#G [ move the cursor to last line ]
+
+#A [ Insert mode ]
+
+#set number [ to view file with line number ]
+
+#syntax on [ to view file with syntax in file ]
+
+#set tabstop=2 [ to stop the tab ]
+
+#set autoindent [ check this command]
+
+#vim .vimrc [ creat file in user home dir & add below lines ]
+set number
+syntax on
+set tabstop=2
+set autoindent
+
+#echo $MYVIMRC [ command to check / locate .vimrc file ]
