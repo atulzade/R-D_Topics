@@ -28,3 +28,11 @@ set tabstop=2
 set autoindent
 
 #echo $MYVIMRC [ command to check / locate .vimrc file ]
+
+#V [ select the text & #d to delete selected text ]
+
+6:30 mns
+
+
+
+
