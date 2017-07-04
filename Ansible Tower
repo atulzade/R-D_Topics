@@ -1,0 +1,29 @@
+http://docs.ansible.com/ansible-tower/latest/html/administration/management_jobs.html
+
+######################################################
+               Ansible Tower Notes:
+
+###Inventory###
+#http://docs.ansible.com/ansible-tower/latest/html/userguide/inventories.html
+Steps:
+#Click on INVENTORIES menu
+#Click on +ADD butoon
+#Fill the details *NAME [ SVN-SRV ] DESCRIPTION [ SVN-SRV ] ORGANIZATION [ Default ]
+#Click on save buton
+#Click on +ADD HOST
+#Fill the details *HOST NAME [ 192.168.2.35 ] DESCRIPTION [ SVN-SRV ]
+#Click on save button
+#Finish#
+
+###CREDENTIALS###
+#Click on settings TAB
+#Click on CREDENTIALS
+#Click on +ADD button
+#Fill the details *NAME [SVN-CRED] DESCRIPTION [SVN-CRED] ORGANIZATION [Default]
+*TYPE [Choose a type - Machine] TYPE DETAILS [USERNAME - root] PASSWORD [ASK]
+#Finish#
+
+###RUN THE TEMPLATE###
+#Run the template using Tower Admin & Tower Password. 
+
+#######################################################
