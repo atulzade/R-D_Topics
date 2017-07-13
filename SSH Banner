@@ -1,0 +1,89 @@
+https://www.tecmint.com/protect-ssh-logins-with-ssh-motd-banner-messages/
+
+
+
+Protect SSH Logins with SSH & MOTD Banner Messages
+
+by Ravi Saive | Published: November 20, 2012 | Last Updated: November 20, 2012
+Download Your Free eBooks NOW - 10 Free Linux eBooks for Administrators | 4 Free Shell Scripting eBooks
+
+One of the easiest way to protect and secure SSH logins by displaying warming message to UN-authorized users or display welcome or informational messages to authorized users.
+Protect SSH Logins
+
+Display SSH Banner Messages
+
+Being a system administrator whenever configure Linux servers I always use to configure a security banners for ssh logins. The banner contains some security warning information or general information. See my example banner message which I used for my all servers.
+
+    ALERT! You are entering into a secured area! Your IP, Login Time, Username has been noted and has been sent to the server administrator!
+    This service is restricted to authorized users only. All activities on this system are logged.
+    Unauthorized access will be fully investigated and reported to the appropriate law enforcement agencies.
+
+There are two way to display messages one is using issue.net file and second one is using MOTD file.
+
+    issue.net : Display a banner message before the password login prompt.
+    motd : Display a banner message after the user has logged in.
+
+So, I strongly recommended all system administrator to display a banner messages before allowing users to log in to systems. Just follow below simple steps to enable SSH logging messages.
+Display SSH Warning Message to Users Before Login
+
+To display Welcome or Warning message for SSH users before login. We use issue.net file to display a banner massages. Open the following file with VI editor.
+
+# vi /etc/issue.net
+
+Add the following banner sample message and save the file. You can add any custom banner message to this file.
+
+###############################################################
+#                                                      Welcome to TecMint.com                                                           # 
+#                                   All connections are monitored and recorded                                         #
+#                          Disconnect IMMEDIATELY if you are not an authorized user!                    #
+###############################################################
+
+Open the master ssh configuration file and enable banners.
+
+# vi /etc/ssh/sshd_config
+
+Search for the word “Banner” and uncomment out the line and save the file.
+
+#Banner /some/path
+
+It should be like this.
+
+Banner /etc/issue.net (you can use any path you want)
+
+Next, restart the SSH daemon to reflect new changes.
+
+# /etc/init.d/sshd restart
+Stopping sshd:                                             [  OK  ]
+Starting sshd:                                             [  OK  ]
+
+Now try to connect to server you will see banner message similar to below.
+Display SSH Banner Messages
+
+SSH Banner Messages Before Login
+Display SSH Warning Message to Users After Login
+
+To display banner messages after login, we use motd file, which is used to display banner massages after login. Now open it with VI editor.
+
+vi /etc/motd
+
+Place the following banner sample message and save the file.
+
+###############################################################
+#                                                   Welcome to TecMint.com                                                             # 
+#                                    All connections are monitored and recorded                                       #
+#                           Disconnect IMMEDIATELY if you are not an authorized user!                  #
+###############################################################
+
+Now again try to login into server you will get both the banner messages. See the screenshot attached below.
+Display SSH Banner After Login
+
+Display SSH Banner After Login
+Share
++
+0
+0
+3
+
+##############################FINISH##################################
+
+    
