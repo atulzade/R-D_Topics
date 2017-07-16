@@ -31,7 +31,8 @@ set autoindent
 
 #V [ select the text & #d to delete selected text ]
 
-6:30 mns
+#Command to remove all core files from system
+# rm -f $(find / -name core) &> /dev/null 
 
 
 
