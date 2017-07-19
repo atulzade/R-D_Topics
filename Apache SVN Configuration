@@ -1,0 +1,307 @@
+Apache SVN Server Installation & Configuration:
+
+Reff Link: 
+http://www.itzgeek.com/how-tos/linux/centos-how-tos/install-apache-svn-subversion-on-centos-7-rhel-7.html 
+https://www.vultr.com/docs/how-to-setup-an-apache-subversion-svn-server-on-centos-7
+
+Install Apache SVN (Subversion) on CentOS 7 / RHEL 7
+
+Subversion, widely known as SVN, is open source version control system used for storing the historical changes of source file and documents, 
+and manages it over a period of time. This post helps you to setup SVN on CentOS 7.
+
+Installing WebServer:
+
+Update the system.
+#yum update
+
+Here we will install Apache server as webserver for the SVN repository.
+#yum -y install httpd httpd-tools
+
+Allow httpd through firewall
+#firewall-cmd --permanent --zone=public --add-service=http
+#firewall-cmd --reload
+
+Start the Apache and verify it by visiting http://your.ip.address.
+#systemctl start httpd.service
+
+Installing Subversion:
+Once the Apache is installed, issue the following command to install subversion.
+#yum -y install subversion subversion-tools mod_dav_svn
+
+Configuring Subversion:
+
+Once the installation is done, you can start to create repositories as per the requirements. In my case i am creating /svn as the base and will create the 
+repository in it.
+#mkdir /svn
+
+Create the repository called "testrepo"
+#svnadmin create /svn/testrepo
+
+Change the permission of the repository in such a way that Apache can read and write.
+#chown -R apache:apache /svn/testrepo/
+
+If you have SELinux enabled on the system, run the following command.
+#chcon -R -t httpd_sys_content_t /svn/testrepo/
+#chcon -R -t httpd_sys_rw_content_t /svn/testrepo/
+
+Configure virtual host in Apache.
+#vi /etc/httpd/conf.d/svn.conf
+
+Place the following content.
+<location /svn>
+DAV svn
+SVNParentPath /svn
+</location>
+
+Restart the apache server.
+#systemctl reload httpd.service
+
+Access the SVN using the browser, url will be http://your-ip-address/svn/testrepo. It wont ask you any password to view.
+
+Securing SVN: (Optional)
+
+The above setting would allow the anonymous users to view and committing the files. To stop the anonymous access, you have to edit the apache configuration 
+which was created just two steps before.
+
+#vi /etc/httpd/conf.d/svn.conf
+
+Place the following content.
+
+<location /svn>
+DAV svn
+SVNParentPath /svn/
+AuthType Basic
+AuthName "Authorization Realm"
+AuthUserFile /etc/subversion/svn.users
+Require valid-user
+</location>
+
+Created the password file for the user.
+
+#htpasswd -cm /etc/subversion/svn.users raj
+
+Restart the apache server.
+
+#systemctl reload httpd.service
+
+
+You Are Here: Home → Linux → How To's → Centos/Redhat → Install Apache SVN (Subversion) on CentOS 7 / RHEL 7
+Install Apache SVN (Subversion) on CentOS 7 / RHEL 7
+By: Raj Last Updated: January 16, 2016 1 Comment apache, centos 7, rhel 7, subversion, svn
+
+Apache Subversion
+
+Subversion, widely known as SVN, is open source version control system used for storing the historical changes of source file and documents, and manages it 
+over a period of time. This post helps you to setup SVN on CentOS 7.
+
+Installing WebServer:
+
+Update the system.
+
+yum update
+
+Here we will install Apache server as webserver for the SVN repository.
+
+yum -y install httpd httpd-tools
+
+Allow httpd through firewall
+
+firewall-cmd --permanent --zone=public --add-service=http
+firewall-cmd --reload
+
+Start the Apache and verify it by visiting http://your.ip.address.
+
+systemctl start httpd.service
+
+Installing Subversion:
+
+Once the Apache is installed, issue the following command to install subversion.
+
+yum -y install subversion subversion-tools mod_dav_svn
+
+Configuring Subversion:
+
+Once the installation is done, you can start to create repositories as per the requirements. In my case i am creating /svn as the base and will create the 
+repository in it.
+
+mkdir /svn
+
+Create the repository called “testrepo”
+
+svnadmin create /svn/testrepo
+
+Change the permission of the repository in such a way that Apache can read and write.
+
+chown -R apache:apache /svn/testrepo/
+
+If you have SELinux enabled on the system, run the following command.
+
+chcon -R -t httpd_sys_content_t /svn/testrepo/
+chcon -R -t httpd_sys_rw_content_t /svn/testrepo/
+
+Configure virtual host in Apache.
+
+vi /etc/httpd/conf.d/svn.conf
+
+Place the following content.
+<location /svn>
+DAV svn
+SVNParentPath /svn
+</location>
+
+Restart the apache server.
+
+systemctl reload httpd.service
+
+Access the SVN using the browser, url will be http://your-ip-address/svn/testrepo. It wont ask you any password to view.
+CentOS 7 - SVN Without Authendication
+CentOS 7 ? SVN Without Authendication
+Securing SVN: (Optional)
+
+The above setting would allow the anonymous users to view and committing the files. To stop the anonymous access, you have to edit the apache configuration 
+which was created just two steps before.
+
+vi /etc/httpd/conf.d/svn.conf
+
+Place the following content.
+
+<location /svn>
+DAV svn
+SVNParentPath /svn/
+AuthType Basic
+AuthName "Authorization Realm"
+AuthUserFile /etc/subversion/svn.users
+Require valid-user
+</location>
+
+Created the password file for the user.
+
+htpasswd -cm /etc/subversion/svn.users raj
+
+Restart the apache server.
+
+systemctl reload httpd.service
+
+Testing Subversion:
+
+You can visit the url http://your-ip-address/svn/testrepo to check out the content, you will be asked to enter the user name and password 
+(If you have setup the Secure SVN.
+
+Upon successful login; content will be listed like below.
+
+Create a template directory and  import into SVN.
+
+#mkdir -p /tmp/repository/project1/{trunk,branches,tags}
+#svn import -m 'Initial Import' /tmp/repository/project1/ http://192.168.12.106/svn/testrepo
+
+Output will be like below.
+--- Image ---
+
+Check out the Revision 1.
+
+-------------------------- Link-1-Finished------------------------------------------
+
+https://www.vultr.com/docs/how-to-setup-an-apache-subversion-svn-server-on-centos-7
+
+Append the following segment:
+
+<Location /svn>
+DAV svn
+SVNParentPath /svn
+AuthName "SVN Repos"
+AuthType Basic
+AuthUserFile /etc/svn/svn-auth
+AuthzSVNAccessFile /svn/authz
+Require valid-user
+</Location>
+
+Save and quit:
+:wq!
+
+Note: In this configuration, we specified an HTTP access authentication file "/etc/svn/svn-auth" and a user permission control file "/svn/authz". 
+Both of them will be created later.
+
+Create an SVN repo
+
+sudo mkdir /svn
+cd /svn
+sudo svnadmin create repo1
+sudo chown -R apache:apache repo1
+
+3) Setup SVN user accounts
+
+Use the following commands to create an HTTP access authentication file "/svn/svn-auth" and an SVN user account "user001":
+
+sudo mkdir /etc/svn
+sudo htpasswd -cm /etc/svn/svn-auth user001
+sudo chown root:apache /etc/svn/svn-auth
+sudo chmod 640 /etc/svn/svn-auth
+
+If you want to create more SVN user accounts, refer to the following commands:
+
+sudo htpasswd -m /etc/svn/svn-auth user002
+sudo htpasswd -m /etc/svn/svn-auth user003
+
+Warning: Do not use the "-c" flag from now on, or you will rebuild the authentication file and erase all the user accounts you setup earlier.
+
+4) Setup permissions for users
+
+sudo cp /svn/repo1/conf/authz /svn/authz
+sudo vi /svn/authz
+
+Assume that:
+
+    User "user001" is the administrator.
+    User "user002" is a qualified user who owns read and write permissions to the SVN repo "repo1".
+    User "user003" is a trainee who can only read the contents of SVN repo "repo1".
+
+Then you can modify the settings within as below:
+
+[groups]
+admin=user001
+repo1_user=user002
+repo1_trainee=user003
+
+[/]
+@admin=rw
+
+[repo1:/]
+@repo1_user=rw
+@repo1_trainee=r
+
+Save and quit:
+
+:wq!
+
+Step 5: Start Apache and modify firewall rules
+
+Start Apache:
+
+sudo systemctl start httpd.service
+sudo systemctl enable httpd.service
+
+Open the HTTP service port:
+
+sudo firewall-cmd --zone=public --permanent --add-service=http
+sudo firewall-cmd --reload
+
+Finally, use the following path to access the SVN repo "repo1" on your server from an SVN client:
+
+http://<your-server-ip>/svn/repo1/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
