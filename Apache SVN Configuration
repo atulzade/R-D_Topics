@@ -292,7 +292,33 @@ http://<your-server-ip>/svn/repo1/
 ################################### FINISH ############################################
 
 
++++++++++++++++++++++++++++++Auth File Configuration+++++++++++++++++++++++++++++++++++
 
+[groups]
+# harry_and_sally = harry,sally
+# harry_sally_and_joe = harry,sally,&joe
+administrator=admin
+repo_user=raj
+repo_trainee=atul,mohsin,rahul
+repo2=raj,atul
+repo3=mohsin
+
+[/]
+@administrator=rw
+
+[testrepo:/]
+@repo_user=rw
+@repo_trainee=r
+
+[repo1:/]
+@repo_user=rw
+@repo_trainee=r
+
+[repo2:/]
+@repo2=rw
+@repo3=r
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 
