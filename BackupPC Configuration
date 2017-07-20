@@ -1,0 +1,203 @@
+http://www.plugged.in/linux/centos-7-backuppc-installation-guide.html
+
+
+Centos 7 – BackupPC Installation Guide
+/LINUX /Centos 7 – BackupPC Installation Guide
+
+    May 22, 2016 Fehmi Can Tokay LINUX 1 Comment 
+
+More about Fehmi Can Tokay
+
+Written by: Fehmi Can Tokay on May 22, 2016.
+
+ 
+
+This is a complete guide to install BackupPC on your CentOS 7 server.
+
+#Install BackupPC and prerequsities
+
+yum upgrade -y
+yum install epel-release
+yum install backuppc nfs-utils nfs-utils-lib bzip2
+systemctl restart backuppc.service
+
+#Set permissions
+
+cd /usr/share/BackupPC/
+chown backuppc:apache sbin/*
+
+cd /usr/share/BackupPC/sbin
+chmod u+s BackupPC_Admin
+
+usermod -s /bin/bash backuppc
+
+#Set firewall rule for HTTP port.
+
+firewall-cmd --zone=public --add-port=80/tcp --permanent
+
+firewall-cmd --reload
+
+#Edit BackupPC config
+
+vi /etc/BackupPC/config.pl
+
+Edit
+1
+2
+	
+$Conf{CgiAdminUserGroup} = '';
+ $Conf{CgiAdminUsers} = '';
+
+TO
+1
+2
+	
+$Conf{CgiAdminUserGroup} = '';
+ $Conf{CgiAdminUsers} = 'backuppc';
+
+THEN
+
+Edit
+1
+	
+$Conf{PingPath} = '';
+
+TO
+1
+	
+$Conf{PingPath} = '/bin/ping';
+
+#Edit your apache configuration
+
+vi /etc/httpd/conf.d/BackupPC.conf
+
+01
+02
+03
+04
+05
+06
+07
+08
+09
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+	
+<Directory /usr/share/BackupPC/>
+ # BackupPC requires valid authentication in order for the web interface to
+ # function properly. One can view the web interface without authentication
+ # though all functionality is disabled.
+ #
+ # htpasswd -c /etc/BackupPC/apache.users yourusername
+ #
+AuthType Basic
+ AuthUserFile /etc/BackupPC/apache.users
+ AuthName "BackupPC"
+<IfModule mod_authz_core.c>
+ # Apache 2.4
+ <RequireAll>
+ Require valid-user
+ <RequireAny>
+ Require local
+ # --> In order to access only this specific IP
+ Require ip 192.168.16
+ # --> Uncomment for access everywhere
+ # Require all granted
+ </RequireAny>
+ </RequireAll>
+ </IfModule>
+ <IfModule !mod_authz_core.c>
+ AllowOverride All
+ Order allow,deny
+ Deny from all
+ </IfModule>
+</Directory>
+Alias /BackupPC/images /usr/share/BackupPC/html/
+ ScriptAlias /BackupPC /usr/share/BackupPC/sbin/BackupPC_Admin
+ ScriptAlias /backuppc /usr/share/BackupPC/sbin/BackupPC_Admin
+
+#Create username and password for BackupPC GUI
+
+htpasswd -c /etc/BackupPC/apache.users backuppc
+
+New password:
+Re-type new password:
+Adding password for user backuppc
+
+#Restart your services
+
+systemctl restart backuppc.service
+systemctl restart httpd.service
+
+#Then add your ssh key to your remote server.
+
+su - backuppc
+
+ssh-keygen -t rsa
+
+Generating public/private rsa key pair.
+Enter file in which to save the key (/var/lib/BackupPC/.ssh/id_rsa):
+Created directory ‘/var/lib/BackupPC/.ssh’.
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /var/lib/BackupPC/.ssh/id_rsa.
+Your public key has been saved in /var/lib/BackupPC/.ssh/id_rsa.pub.
+
+ssh-copy-id root@your-remote-ip
+
+#Test it.
+
+ssh root@your-remote-ip
+
+#Then go
+
+http://your-ip/BackupPC
+
+#Enter your username and password that you created before #htpasswd -c /etc/BackupPC/apache.users backuppc
+
+#Go “Edit Hosts”
+
+#Click Add
+
+#Then write an hostname or IP of your remote server
+
+#Then click SAVE
+
+#Refresh your page and select your host.
+
+!!! DO NOT FORGET INSTALL RSYNC TO YOUR REMOTE SERVER !!!
+
+#Click “Edit Config” for your selected host
+
+#Select Xfer
+
+#Add “*” value for “BackupFilesOnly” Box
+
+#Write down your path name that you want to create backup in RsyncShareName Box
+
+#Then Click Save.!
+
+#Click Start FULL BACKUP
+
+You are ready to go!
