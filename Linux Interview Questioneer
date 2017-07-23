@@ -1,0 +1,174 @@
+Linux System Admin Questioneer:
+
+https://fossbytes.com/top-50-linux-system-administrator-interview-questions-answers/
+
+http://www.computernetworkingnotes.com/rhce-interview-questions/linux-system-admin-interview-questions.html
+
+https://www.linkedin.com/pulse/10-interview-questions-unixlinux-system-elvis-ibrahimi
+
+----------------------------------------------------
+
+
+1. What does nslookup do?
+#to check the domain
+
+2. How do you display the top most process utilizing CPU process?
+#top ( command )
+
+3. How to check all open ports on a Linux machine and block the unused ports?
+#netstat -anp #lsof -i 
+
+4. What is Linux? How is it different from UNIX?
+#
+
+5. Explain the boot process of Unix System in details.
+BIOS-MBR-GRUB-kernal-init-run levels
+
+6. How do you change the permissions? How to create a file that’s read-only property?
+#chmod #chmod 440
+
+7. Explain SUDO in detail. What are its disadvantages?
+#
+
+8. What is the difference between UDP and TCP?
+#There are two types of Internet Protocol (IP) traffic. 
+They are TCP or Transmission Control Protocol and UDP or User Datagram Protocol. 
+TCP is connection oriented ? once a connection is established, data can be sent bidirectional. 
+UDP is a simpler, connectionless Internet protocol. 
+Multiple messages are sent as packets in chunks using UDP.
+TCP: HTTP, HTTPs, FTP, SMTP, Telnet 	
+UDP: DNS, DHCP, TFTP, SNMP, RIP, VOIP.
+
+9. Describe the boot order of a Linux machine.
+BIOS-MBR-GRUB-kernal-init-run levels
+
+10. Design a 3-tier web application.
+#
+
+11. Sketch how you would route network traffic from the internet into a few subnets.
+#
+
+12. How do you know about virtualization? Is it good to use?
+#
+
+13. What are different levels of RAID and what level will you use for a web server and database server?
+#
+
+14. List some latest developments in open source technologies.
+#
+
+15. Have you ever contributed to an open source project?
+#
+
+16. Systems engineer or a systems administrator? Explain?
+#
+
+17. List some of the common unethical practices followed by a system professional.
+#
+
+18. What is the common size for a swap partition under a Linux system?
+# Best practice says that SWAP partition size should be double of actual RAM
+
+19. What does a nameless directory represent in a Linux system?
+#This empty directory name serves as the nameless base of the Linux file system. 
+This serves as an attachment for other directories, files, drives and devices.
+
+20. How to list all files, including hidden ones, in a directory?
+#ls -al
+
+21. How to add a new system user without login permissions?
+#adduser subversion --shell=/bin/false --no-create-home
+
+22. Explain a hardlink. What happens when a hardlink is removed?
+#Hard links point directly to the physical file on disk, and not on the path name. 
+This means that if you rename or move the original file, the link will not break, 
+since the link is for the file itself, not the path where the file is located.
+
+23. What happens when a sysadmin executes this command: chmod 444 chmod
+# $ cp -p /usr/bin/grep /tmp/testfile
+$ cat /usr/bin/chmod > /tmp/testfile
+$ cp -p /tmp/testfile /usr/bin/chmod
+
+24. How do you determine the private and public IP addresses of a Linux system?
+#hostname -I
+
+25. How do you send a mail attachment using bash?
+#mail -s "Backup" -a mysqldbbackup.sql backup@email.com < message.txt
+#cat message.txt | mail -s "Backup" -a mysqldbbackup.sql backup@email.com 
+
+26. Tell me something about the Linux distros used on servers.
+#
+
+27. Explain the process to re-install Grub in Linux in the shortest manner.
+Link: https://www.av8n.com/computer/htm/grub-reinstall.htm
+
+28. What is an A record, an NS record, a PTR record, a CNAME record, an MX record?
+#http://dns-record-viewer.online-domain-tools.com/
+
+29. What is a zombie process? State its causes?
+#https://www.howtogeek.com/119815/htg-explains-what-is-a-zombie-process-on-linux/
+#top [z]
+#kill -s SIGCHLD pid
+
+30. When do we prefer a script over a compiled program?
+#
+
+31. How to create a simple master/slave cluster?
+#http://www.serverlab.ca/tutorials/linux/database-servers/how-to-create-a-mysql-master-slave-cluster-on-ubuntu-14/
+
+32. What happens when you delete the source to a symlink?
+#https://www.nixtutor.com/freebsd/understanding-symbolic-links/
+
+33. How to restrict an IP so that it may not use the FTP Server?
+#
+
+34. Explain the directory structure of Linux. What contents go in /usr/local?
+https://www.tecmint.com/linux-directory-structure-and-important-files-paths-explained/
+
+35. What is git? Explain its structure and working.
+#
+
+36. How would you send an automated email to 100 people at 12:00 AM?
+#https://askubuntu.com/questions/332481/setup-cron-job-to-send-email-to-a-bunch-of-people-on-a-regular-basis
+
+37. Tell me about ZFS file system.
+#
+
+38. How to change the default run level in a Linux system?
+#http://www.itzgeek.com/how-tos/linux/centos-how-tos/change-default-runlevel-in-centos-7-rhel-7.html
+
+39. How would you change the kernel parameters in Linux?
+#https://unix.stackexchange.com/questions/109071/whats-the-right-way-to-set-linux-kernel-runtime-parameters
+
+40. State the differences between SSH and Telnet.
+#
+
+41. How would you virtualize a physical Linux machine?
+#
+
+42. Tell me about some quirky Linux commands.
+#
+
+43. Explain how HTTPS works.
+#
+
+44. Do you know about TOR browser? Explain its working.
+#
+
+45. How to trigger a forced system check the next time you boot your machine?
+#
+
+46. What backup techniques do you prefer?
+#
+
+47. Tell me something about SWAP partition.
+#
+
+48. Explain Ping of Death attack.
+#
+
+49. How do you sniff the contents of an IP packet?
+# 
+
+50. Which OSI layer is responsible for making sure that the packet reaches its correct destination?
+#https://www.examcollection.com/certification-training/network-plus-comparing-osi-and-tcp-model.html
