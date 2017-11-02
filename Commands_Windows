@@ -1,0 +1,6 @@
+rstrui.exe ( System restore_Run command )
+epedit.msc ( Group Policy )
+appwiz.cpl ( Programs & Features )
+controlpanel ( Control panel )
+regedit ( Registry Editor )
+winword ( Open word file using Run command )
