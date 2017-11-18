@@ -1,0 +1,116 @@
+http://www.serverlab.ca/tutorials/linux/network-services/creating-a-yum-repository-server-for-red-hat-and-centos/
+
+
+Overview
+
+There are many reasons why you may want to have a local repository for your Red Hat or CentOS servers. You may be in an isolated network that has no connection to the outside world, yet you still want to keep your servers up-to-date or have all of the default packages available. Another may be that you develop and maintain your own software and need a central location to store it, where other servers can easily access it.
+
+This tutorial will show you how to configure a Yum repository server. And I promise, it is actually really simple. There are a few ways to give your other servers access to it, including HTTP, FTP, and NFS.
+Install Createrepo
+
+To create and intialize your Yum repository, you must first download and install the createrepo package – available from the default CentOS repos. If you do not have access to the Internet, you can install by using the Red Hat or CentOS installation disc as a repository.
+
+    Install Createrepo
+
+    yum install createrepo
+
+Create the Repository
+Prepare Repository Directory
+
+Your repository needs a directory where the package are stored. Ideally, you will want the repository to be in its own volume, and preferably on its own disk. For the purpose of showing how to create a repo, I’ll just be adding it to the root volume. My repository will created in /repos/CentOS/6/5/. When dealing with multiple Red Hat based distributions and versions, it’s best to create a directory structure that’s easy to understand and manage.
+
+    Create a new directory for the repository.
+
+    mkdir -p /repos/CentOS/6/5/Packages
+
+    Add your RPM packages to the directory we just created.
+
+Initialize The Repository
+
+Repositories use a simple database to keep track of all the packages and their dependancies. This is how it can provide you with all the packages required to be installed so quickly. The initialization step creates the database and prepares the directory to host the repository, allowing clients to connect to it.
+
+    Initialize the repository.
+
+    createrepo /repos/CentOS/6/5
+
+Updating a Repository
+
+Not all repositories are stagnant. Usually you will want to add new packages or package updates. Adding them to your Packages directory isn’t enough to make it available to clients. You also need to update the repositorie’s package database.
+
+    Add new packages to the repositories Package directory.
+    Update the repository’s database.
+
+    createrepo --update /repos/CentOS/6/5
+
+Mirror a Base Repository
+Using the ISO or Installation Disc
+
+The installation disc for Red Hat and CentOS comes with an entire library of the base packages, which mirrors the online repository. The packages will be out of date, but you can update them later on yourself. Seeding your repository using the installation disc is the easist way to create a base repository.
+
+    Mount the installation disc or ISO.
+    Copy the packages on the disc to your repository. As an example, I’ve mounted my disc to /media/CentOS.
+
+    cp -arv /media/CentOS/Packages/* /repos/CentOS/6/5/
+
+    Create the repository.
+
+    createrepo /repos/CentOS/6/5
+
+Mirroring an Online Base Repository
+
+Another approach is to download the packages from the online repository. This will ensure you have the most up-to-date versions of the packages for your repository.
+
+    Find the an existing mirror by going to http://centos.org/download/mirrors/.  Look for a site near you and grab the address under the Rysnc Location column. As an example, I’ll be using a Univerity near my location.
+    Use Rsync to download the entire repository. I am only interested in CentOS 6.5, so I’m targeting the directory for it at the local university.
+
+    rsync -rz --progress rsync://mirror.csclub.uwaterloo.ca/centos/os/x86_64/ /repos/CentOS/6/5/
+
+Publish Your Local Repository
+
+The repository is ready, but unless you publish the repository using HTTP or FTP you’re clients won’t be able to use it.
+Over HTTP using Apache
+
+    Install Apache.
+
+    yum install httpd
+
+    Create a symbolic link in the default Apache root directory to our new repository. We’re going to create the link so it points to the root of our CentOS repo directory. This lessens the effort required when adding new releases to the repo.
+
+    ln -s /var/www/html/CentOS /repos/CentOS
+
+    Start the Apache daemon to start hosting the repo files.
+
+Over FTP using VSFTPD
+
+    Install VSFTP
+
+    yum install vsftpd
+
+    Create a smbolic link in the default VSFTP root directory to our new repository. We’re going to create the link so it points to the root of our CentOS repo directory. This lessens the effort required when adding new releases to the repo.
+
+    ln -s /var/ftp/public/CentOS /repos/CentOS
+
+    Start the VSFTPD daemon to start hosting the repo files.
+
+Configure Repository on Client
+
+Our repository is now ready for your clients. Before they can access it, we need to create a Yum repository configuration file.
+
+    Log onto the client computer.
+    Navigate to the directory hosting the Yum repository configuration files.
+
+    cd /etc/yum.repos.d
+
+    Create a configuration file for your local repository.
+
+    nano local.repo
+
+    Add the following lines to the file. Replace the baseurl value to point to either your HTTP host or your FTP host.
+
+    [mylocalrepo]
+     name=Local CentOS Repo
+     baseurl=http://my-repo-server/CentOS/6/5
+     gpgcheck=0
+
+    Save your changes and exit the text editor.
+
